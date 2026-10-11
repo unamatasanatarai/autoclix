@@ -12,16 +12,13 @@ public struct HotKeySection: View {
 
     public var body: some View {
         Button(action: showPresetsMenu) {
-            HStack(spacing: 4) {
-                Spacer()
-                Text(hotKeyManager.currentConfig.displayString)
-                    .font(.system(size: 10, weight: .regular, design: .rounded))
-                    .foregroundColor(isHovered ? Theme.textPrimary : Theme.textSecondary)
-                Spacer()
-            }
-            .frame(height: 20)
-            .background(isHovered ? Theme.surfaceHover : Color.clear)
-            .cornerRadius(4)
+            Text(hotKeyManager.currentConfig.displayString)
+                .font(.system(size: 9.5, weight: .regular, design: .rounded))
+                .foregroundColor(isHovered ? Theme.textPrimary : Theme.textSecondary)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(isHovered ? Theme.surfaceHover : Color.clear)
+                .cornerRadius(3)
         }
         .buttonStyle(PlainButtonStyle())
         .background(MenuAnchorView { anchorView = $0 })

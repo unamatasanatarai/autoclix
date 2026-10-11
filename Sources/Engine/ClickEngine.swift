@@ -166,7 +166,7 @@ public final class ClickEngine: ObservableObject {
             self.isClickInProgress = true
             self.lastClickMachTime = currentMach
 
-            let success = self.adapter.postClick(button: self.config.button)
+            let success = self.adapter.postClick(button: self.config.button, focusWindow: self.config.focusWindow)
             self.isClickInProgress = false
 
             if success {

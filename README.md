@@ -55,8 +55,10 @@ Configure any click speed between 1 and 900 clicks per second (default: 8 CPS). 
 * **Option (⌥):** ±5 CPS
 * **Command (⌘):** ±10 CPS
 
-### Primary, Secondary & Middle Button Dispatch
-Switch instantly between **Left** (Primary), **Right** (Secondary), and **Middle** (Center / Scroll Wheel) clicks with zero input lag.
+### Dual Click Modes (Focus vs. Background)
+Toggle between two interaction modes to suit your workflow:
+* **Focus Mode (Default):** Clicks behave as real hardware clicks, automatically activating and raising the window under the pointer and transferring focus across applications.
+* **Background Mode:** Clicks directly through into target coordinates without stealing active keyboard focus or bringing background windows forward.
 
 ### Three-Way Automated Session Controls
 Automate sessions with modular, stackable triggers:
@@ -96,7 +98,7 @@ Monitor live session performance through an integrated HUD that displays:
 | **Event Pipeline** | Accessibility API or JS bridges | Native Quartz HID Event Tap (`.cghidEventTap`) |
 | **Down/Up Dwell** | Uncontrolled / Zero delay (dropped clicks) | Engineered 6ms micro-dwell for guaranteed actuation |
 | **Workspace Presence** | Heavy Dock window | Native Menu Bar panel (`LSUIElement`), no Dock icon |
-| **Focus Handling** | Steals keyboard and window focus | Non-activating floating panel with unfocused inputs |
+| **Focus Handling** | Rigid (forces either click-through or focus steal) | Selectable Focus (moves window focus) or Background mode |
 | **Quit Safety** | Single ⌘Q closes app during clicking | Double ⌘Q confirmation guard prevents accidental exit |
 | **TCC Permissions** | Broken on every unsigned build | Stable ad-hoc designated code signing requirement |
 | **System Sleep** | Continues running / hangs system | Automatic pause and cancel via `NSWorkspace.willSleepNotification` |

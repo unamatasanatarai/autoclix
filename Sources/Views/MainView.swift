@@ -88,8 +88,36 @@ public struct MainView: View {
             // Timers & Limits in 3 columns
             TimerConfigSection(engine: engine)
 
-            // Global shortcut selector at the bottom
-            HotKeySection(hotKeyManager: hotKeyManager)
+            // Bottom bar: Mode switch (Focus | Background) & Global shortcut
+            HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        engine.config.focusWindow = true
+                    }) {
+                        Text("Focus")
+                            .font(.system(size: 9.5, weight: engine.config.focusWindow ? .semibold : .regular))
+                            .foregroundColor(engine.config.focusWindow ? Theme.textPrimary : Theme.textSecondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .help("Focus mode: Clicks activate and raise windows to front")
+
+                    Button(action: {
+                        engine.config.focusWindow = false
+                    }) {
+                        Text("Background")
+                            .font(.system(size: 9.5, weight: !engine.config.focusWindow ? .semibold : .regular))
+                            .foregroundColor(!engine.config.focusWindow ? Theme.textPrimary : Theme.textSecondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .help("Background mode: Clicks without stealing focus or raising windows")
+                }
+
+                Spacer()
+
+                // Global shortcut selector
+                HotKeySection(hotKeyManager: hotKeyManager)
+            }
+            .frame(height: 20)
         }
         .padding(12)
         .frame(width: 260)
