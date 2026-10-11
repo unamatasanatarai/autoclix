@@ -1,0 +1,11 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127 128">
+  <g transform="translate(-61 -28)" fill="#242424">
+    <path d="M64 43 98 56 M147 51 176 31 M153 72 187 74 M86 122 105 94"
+          fill="none" stroke="#242424" stroke-width="6"/>
+    <g transform="translate(87 50) scale(0.3)">
+      <path d="M123 69 331 263 210 269 123 353Z"/>
+      <path d="M123 69 210 269 123 353Z" fill="#414141"/>
+    </g>
+  </g>
+</svg>
