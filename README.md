@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/unamatasanatarai/autoclix/releases/latest">
+    <img src="https://img.shields.io/github/v/release/unamatasanatarai/autoclix?color=007AFF&label=Download%20Latest%20Release&logo=apple&style=for-the-badge" alt="Download Latest Release">
+  </a>
+</p>
+
+<p align="center">
   <a href="#why-autoclix"><img src="https://img.shields.io/badge/Platform-macOS%2012.0%2B-black?style=flat-square&logo=apple" alt="macOS 12.0+"></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Language-Swift%205-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 5"></a>
   <a href="#license"><img src="https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square" alt="License: GPL-2.0"></a>
@@ -99,7 +105,15 @@ Monitor live session performance through an integrated HUD that displays:
 
 ## Quick Start
 
-### Build and Launch
+### 1. Download Pre-built App (Recommended)
+
+Get the styled DMG installer directly from the [Latest Release](https://github.com/unamatasanatarai/autoclix/releases/latest):
+
+1. Download the `.dmg` from [GitHub Releases](https://github.com/unamatasanatarai/autoclix/releases/latest).
+2. Open the disk image and drag **AutoCliX** into your **Applications** folder.
+3. Launch AutoCliX from Spotlight or `/Applications`.
+
+### 2. Build and Launch from Source
 
 Compile with Whole-Module-Optimization and launch immediately:
 
