@@ -2,99 +2,60 @@ import SwiftUI
 
 public struct ClickConfigSection: View {
     @ObservedObject var engine: ClickEngine
-    @State private var hoveredButton: MouseButton? = nil
     @State private var cpsInputText: String = ""
     @State private var isDecrementHovered: Bool = false
     @State private var isIncrementHovered: Bool = false
-
-    private let buttons: [MouseButton] = [.left, .middle, .right]
 
     public init(engine: ClickEngine) {
         self.engine = engine
     }
 
     public var body: some View {
-        VStack(spacing: 8) {
-            // Mouse Button Segmented Switcher (Left | Middle | Right)
-            HStack(spacing: 16) {
-                ForEach(buttons) { btn in
-                    let isSelected = engine.config.button == btn
-                    let isHovered = hoveredButton == btn
-
-                    Button(action: {
-                        engine.config.button = btn
-                    }) {
-                        Text(btn.displayName)
-                            .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
-                            .foregroundColor(isSelected ? Theme.textPrimary : (isHovered ? Theme.textPrimary : Theme.textSecondary))
-                            .frame(maxWidth: .infinity)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(height: 20)
-                    .onHover { isHovering in
-                        hoveredButton = isHovering ? btn : nil
-                    }
-                }
+        VStack(spacing: 1) {
+            // Increment button (+) on top
+            Button(action: incrementCPS) {
+                Image(systemName: "plus")
+                    .font(.system(size: 7.5, weight: .bold))
+                    .foregroundColor(isIncrementHovered ? Theme.textPrimary : Theme.textSecondary)
+                    .frame(width: 28, height: 11)
+                    .background(isIncrementHovered ? Theme.surfaceHover : Color.clear)
+                    .cornerRadius(2)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(PlainButtonStyle())
+            .onHover { isIncrementHovered = $0 }
+            .help("Hold Ctrl (±5), Alt (±10), Cmd (±50)")
 
-            // Click Rate Stepper: [-  8 CPS  +] centered & balanced
-            HStack(spacing: 6) {
-                Spacer()
-
-                // Decrement button
-                Button(action: decrementCPS) {
-                    Image(systemName: "minus")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(isDecrementHovered ? Theme.textPrimary : Theme.textSecondary)
-                        .frame(width: 20, height: 20)
-                        .background(isDecrementHovered ? Theme.surfaceHover : Color.clear)
-                        .cornerRadius(3)
-                        .contentShape(Rectangle())
+            // Manual Input Box - Only [0-9], validated on the fly
+            NativeDigitsField(
+                text: $cpsInputText,
+                minValue: 1,
+                maxValue: 900,
+                fontSize: 15.5,
+                fontWeight: .semibold,
+                alignment: .center,
+                textColor: Theme.nsTextPrimary,
+                onChange: { newCPS in
+                    engine.config.cps = Double(newCPS)
                 }
-                .buttonStyle(PlainButtonStyle())
-                .onHover { isDecrementHovered = $0 }
-                .help("Hold Ctrl (±5), Alt (±10), Cmd (±50)")
+            )
+            .frame(width: 32, height: 18)
 
-                // Manual Input Box - Only [0-9], validated on the fly
-                HStack(spacing: 3) {
-                    NativeDigitsField(
-                        text: $cpsInputText,
-                        minValue: 1,
-                        maxValue: 900,
-                        fontSize: 13,
-                        fontWeight: .semibold,
-                        alignment: .right,
-                        textColor: Theme.nsTextPrimary,
-                        onChange: { newCPS in
-                            engine.config.cps = Double(newCPS)
-                        }
-                    )
-                    .frame(width: 26, height: 20)
-
-                    Text("CPS")
-                        .font(.system(size: 9, weight: .regular))
-                        .foregroundColor(Theme.textSecondary)
-                }
-                .frame(height: 20)
-
-                // Increment button
-                Button(action: incrementCPS) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(isIncrementHovered ? Theme.textPrimary : Theme.textSecondary)
-                        .frame(width: 20, height: 20)
-                        .background(isIncrementHovered ? Theme.surfaceHover : Color.clear)
-                        .cornerRadius(3)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(PlainButtonStyle())
-                .onHover { isIncrementHovered = $0 }
-                .help("Hold Ctrl (±5), Alt (±10), Cmd (±50)")
-
-                Spacer()
+            // Decrement button (-) on bottom
+            Button(action: decrementCPS) {
+                Image(systemName: "minus")
+                    .font(.system(size: 7.5, weight: .bold))
+                    .foregroundColor(isDecrementHovered ? Theme.textPrimary : Theme.textSecondary)
+                    .frame(width: 28, height: 11)
+                    .background(isDecrementHovered ? Theme.surfaceHover : Color.clear)
+                    .cornerRadius(2)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(PlainButtonStyle())
+            .onHover { isDecrementHovered = $0 }
+            .help("Hold Ctrl (±5), Alt (±10), Cmd (±50)")
         }
+        .frame(width: 32, height: 40)
         .onAppear {
             syncCPSText()
         }

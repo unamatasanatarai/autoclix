@@ -84,6 +84,30 @@ public final class NativeEventAdapter: EventPosting {
         }
     }
 
+    /// Checks whether the mouse cursor is hovering over AutoCliX's own window or menu bar controls.
+    private func isCursorOverOwnApp(at position: CGPoint) -> Bool {
+        // 1. Fast in-process check against all visible AutoCliX windows
+        let mouseLoc = NSEvent.mouseLocation
+        for window in NSApplication.shared.windows {
+            if window.isVisible && window.frame.contains(mouseLoc) {
+                return true
+            }
+        }
+
+        // 2. Accessibility API check: verify if the UI element under the cursor belongs to AutoCliX
+        let systemWide = AXUIElementCreateSystemWide()
+        var element: AXUIElement?
+        if AXUIElementCopyElementAtPosition(systemWide, Float(position.x), Float(position.y), &element) == .success,
+           let element = element {
+            var pid: pid_t = 0
+            if AXUIElementGetPid(element, &pid) == .success, pid == ProcessInfo.processInfo.processIdentifier {
+                return true
+            }
+        }
+
+        return false
+    }
+
     @discardableResult
     public func postClick(button: MouseButton, focusWindow: Bool = true) -> Bool {
         lock.lock()
@@ -95,6 +119,11 @@ public final class NativeEventAdapter: EventPosting {
         }
 
         guard let pos = currentPointerPosition() else {
+            return false
+        }
+
+        // Do not auto-click on AutoCliX's own window or controls
+        if isCursorOverOwnApp(at: pos) {
             return false
         }
 

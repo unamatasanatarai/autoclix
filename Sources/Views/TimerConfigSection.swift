@@ -12,12 +12,12 @@ public struct TimerConfigSection: View {
     }
 
     public var body: some View {
-        HStack(alignment: .top, spacing: 6) {
+        HStack(alignment: .top, spacing: 3) {
             // Column 1: Start after
             TimerColumnView(
-                title: "Start after",
+                title: "Start delay",
                 isEnabled: $engine.config.startDelayEnabled,
-                unit: "s",
+                unit: nil,
                 onDecrement: decrementDelay,
                 onIncrement: incrementDelay
             ) {
@@ -25,7 +25,7 @@ public struct TimerConfigSection: View {
                     text: $delayText,
                     minValue: 0.0001,
                     maxValue: 3600.0,
-                    fontSize: 9,
+                    fontSize: 8.5,
                     fontWeight: .regular,
                     textColor: Theme.nsTextPrimary,
                     onChange: { engine.config.startDelaySeconds = $0 }
@@ -34,9 +34,9 @@ public struct TimerConfigSection: View {
 
             // Column 2: Stop after
             TimerColumnView(
-                title: "Stop after",
+                title: "Duration",
                 isEnabled: $engine.config.stopDurationEnabled,
-                unit: "s",
+                unit: nil,
                 onDecrement: decrementDuration,
                 onIncrement: incrementDuration
             ) {
@@ -44,7 +44,7 @@ public struct TimerConfigSection: View {
                     text: $durationText,
                     minValue: 0.0001,
                     maxValue: 86400.0,
-                    fontSize: 9,
+                    fontSize: 8.5,
                     fontWeight: .regular,
                     textColor: Theme.nsTextPrimary,
                     onChange: { engine.config.stopDurationSeconds = $0 }
@@ -53,7 +53,7 @@ public struct TimerConfigSection: View {
 
             // Column 3: clicks count
             TimerColumnView(
-                title: "clicks count",
+                title: "Max clix",
                 isEnabled: $engine.config.clickLimitEnabled,
                 unit: nil,
                 onDecrement: decrementClicks,
@@ -63,7 +63,7 @@ public struct TimerConfigSection: View {
                     text: $clicksText,
                     minValue: 1,
                     maxValue: 10_000_000,
-                    fontSize: 9,
+                    fontSize: 8.5,
                     fontWeight: .regular,
                     textColor: Theme.nsTextPrimary,
                     onChange: { engine.config.clickLimit = $0 }
@@ -193,7 +193,7 @@ struct TimerColumnView<InputView: View>: View {
     @State private var isPlusHovered: Bool = false
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 1) {
             // Label
             // When active: clickable to toggle off
             // When inactive: clicking the label or anywhere in column activates it
@@ -201,14 +201,14 @@ struct TimerColumnView<InputView: View>: View {
                 isEnabled.toggle()
             }) {
                 Text(title)
-                    .font(.system(size: 9.5, weight: .regular))
+                    .font(.system(size: 8.5, weight: .regular))
                     .foregroundColor(isEnabled ? Theme.textPrimary : (isColumnHovered ? Theme.textPrimary : Theme.textSecondary))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 2)
+                    .minimumScaleFactor(0.75)
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, 0)
                     .background(isEnabled && isLabelHovered ? Theme.surfaceHover : Color.clear)
-                    .cornerRadius(3)
+                    .cornerRadius(2)
             }
             .buttonStyle(PlainButtonStyle())
             .onHover { isLabelHovered = $0 }
@@ -218,11 +218,11 @@ struct TimerColumnView<InputView: View>: View {
             HStack(spacing: 0) {
                 Button(action: onDecrement) {
                     Image(systemName: "minus")
-                        .font(.system(size: 7, weight: .bold))
+                        .font(.system(size: 6.5, weight: .bold))
                         .foregroundColor(isMinusHovered ? Theme.textPrimary : Theme.textSecondary)
-                        .frame(width: 16, height: 20)
+                        .frame(width: 13, height: 18)
                         .background(isMinusHovered ? Theme.surfaceHover : Color.clear)
-                        .cornerRadius(3)
+                        .cornerRadius(2)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -232,24 +232,24 @@ struct TimerColumnView<InputView: View>: View {
                 HStack(spacing: 1) {
                     inputField()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 14)
+                        .frame(height: 13)
 
                     if let unit = unit {
                         Text(unit)
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .font(.system(size: 7.5, weight: .regular, design: .monospaced))
                             .foregroundColor(Theme.textSecondary)
                             .padding(.trailing, 2)
                     }
                 }
-                .frame(height: 20)
+                .frame(height: 18)
 
                 Button(action: onIncrement) {
                     Image(systemName: "plus")
-                        .font(.system(size: 7, weight: .bold))
+                        .font(.system(size: 6.5, weight: .bold))
                         .foregroundColor(isPlusHovered ? Theme.textPrimary : Theme.textSecondary)
-                        .frame(width: 16, height: 20)
+                        .frame(width: 13, height: 18)
                         .background(isPlusHovered ? Theme.surfaceHover : Color.clear)
-                        .cornerRadius(3)
+                        .cornerRadius(2)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(PlainButtonStyle())

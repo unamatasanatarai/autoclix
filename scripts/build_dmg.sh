@@ -26,13 +26,11 @@ dmg_name="${app_name}-${version}.dmg"
 dmg_path="${build_dir}/${dmg_name}"
 tmp_dmg="${build_dir}/tmp_rw.dmg"
 
-if [[ ! -d "$app_bundle" ]]; then
-    printf '%s\n' "Application bundle not found. Triggering build..."
-    ./scripts/build.sh
-    if [[ $? -ne 0 ]]; then
-        printf '%s\n' "Error: Application build failed" >&2
-        exit 1
-    fi
+printf '%s\n' "Building application bundle for v${version}..."
+./scripts/build.sh
+if [[ $? -ne 0 ]]; then
+    printf '%s\n' "Error: Application build failed" >&2
+    exit 1
 fi
 
 if [[ ! -f "Resources/dmg_background.png" || ! -f "Resources/dmg_background@2x.png" ]]; then

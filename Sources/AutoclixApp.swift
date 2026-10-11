@@ -116,13 +116,14 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
             button.target = self
             button.action = #selector(statusItemClicked(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            button.toolTip = "AutoCliX v\(AppVersion.current)"
         }
         self.statusItem = item
     }
 
     private func setupWindow() {
-        let initialWidth: CGFloat = 260
-        let initialHeight: CGFloat = 244
+        let initialWidth: CGFloat = 190
+        let initialHeight: CGFloat = 230
         let panel = AutoclixPanel(
             contentRect: NSRect(x: 0, y: 0, width: initialWidth, height: initialHeight),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -182,13 +183,13 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
 
         switch state {
         case .running:
-            button.toolTip = "AutoCliX: Running"
+            button.toolTip = "AutoCliX v\(AppVersion.current) (Running)"
         case .waiting:
-            button.toolTip = "AutoCliX: Waiting"
+            button.toolTip = "AutoCliX v\(AppVersion.current) (Waiting)"
         case .permissionRequired:
-            button.toolTip = "AutoCliX: Accessibility Permission Required"
+            button.toolTip = "AutoCliX v\(AppVersion.current) (Accessibility Required)"
         default:
-            button.toolTip = "AutoCliX: Ready"
+            button.toolTip = "AutoCliX v\(AppVersion.current) (Ready)"
         }
     }
 
@@ -275,7 +276,7 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
     private func showContextMenu(at sender: NSStatusBarButton) {
         let menu = NSMenu()
 
-        let titleItem = NSMenuItem(title: "AutoCliX 1.0", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "AutoCliX \(AppVersion.current)", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 

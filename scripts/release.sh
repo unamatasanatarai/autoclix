@@ -128,6 +128,12 @@ else
         exit 1
     fi
 
+    ./scripts/build.sh
+    if [[ $? -ne 0 ]]; then
+        printf '%s\n' "Error: Application build failed" >&2
+        exit 1
+    fi
+
     git diff --quiet "VERSION"
     if [[ $? -ne 0 ]]; then
         git add "VERSION"

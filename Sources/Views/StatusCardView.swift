@@ -12,32 +12,32 @@ public struct StatusCardView: View {
     public var body: some View {
         switch engine.state {
         case .running(let stats):
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Text("\(stats.clicksCount) clicks")
-                    .font(.system(size: 11, weight: .regular, design: .monospaced))
+                    .font(.system(size: 9.5, weight: .regular, design: .monospaced))
 
                 Text("•")
-                    .font(.system(size: 9))
+                    .font(.system(size: 8))
 
                 Text(formatTime(stats.elapsedSeconds))
-                    .font(.system(size: 11, weight: .regular, design: .monospaced))
+                    .font(.system(size: 9.5, weight: .regular, design: .monospaced))
 
                 Text("•")
-                    .font(.system(size: 9))
+                    .font(.system(size: 8))
 
                 Text(String(format: "%.1f CPS", stats.effectiveCPS))
-                    .font(.system(size: 11, weight: .regular, design: .monospaced))
+                    .font(.system(size: 9.5, weight: .regular, design: .monospaced))
             }
             .foregroundColor(Theme.textSecondary)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 3)
+            .padding(.vertical, 2)
 
         case .waiting(let remaining):
             Text(String(format: "Starting in %.1fs...", remaining))
-                .font(.system(size: 11, weight: .regular, design: .monospaced))
+                .font(.system(size: 10, weight: .regular, design: .monospaced))
                 .foregroundColor(Theme.textSecondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 3)
+                .padding(.vertical, 2)
 
         case .permissionRequired:
             VStack(spacing: 3) {

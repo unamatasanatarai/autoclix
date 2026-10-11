@@ -40,14 +40,14 @@ public struct ActionButtonView: View {
                 ZStack {
                     Circle()
                         .fill(buttonColor)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 40, height: 40)
 
                     Image(systemName: buttonIcon)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Theme.textPrimary)
                         .offset(x: engine.state.isActive ? 0 : 1)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(width: 40, height: 40)
             }
             .buttonStyle(PlainButtonStyle())
         }

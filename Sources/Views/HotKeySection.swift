@@ -12,11 +12,11 @@ public struct HotKeySection: View {
 
     public var body: some View {
         Button(action: showPresetsMenu) {
-            Text(hotKeyManager.currentConfig.displayString)
-                .font(.system(size: 9.5, weight: .regular, design: .rounded))
+            Text(hotKeyManager.currentConfig.displayString.replacingOccurrences(of: " (Default)", with: ""))
+                .font(.system(size: 9, weight: .regular, design: .rounded))
                 .foregroundColor(isHovered ? Theme.textPrimary : Theme.textSecondary)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 2)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 1)
                 .background(isHovered ? Theme.surfaceHover : Color.clear)
                 .cornerRadius(3)
         }

@@ -75,12 +75,24 @@ public struct MainView: View {
                 .transition(.opacity)
             }
 
-            // Mouse Button & Rate Configuration
-            ClickConfigSection(engine: engine)
+            // Central Control Row: [CPS Counter]  [Play Button]  [Mouse Graphic]
+            HStack(alignment: .center, spacing: 0) {
+                ClickConfigSection(engine: engine)
+                    .frame(width: 32, height: 40)
 
-            // Primary Action Button (Play / Stop) in vertical center
-            ActionButtonView(engine: engine, hotKeyManager: hotKeyManager, permissionManager: permissionManager)
-                .padding(.vertical, 2)
+                Spacer()
+
+                ActionButtonView(engine: engine, hotKeyManager: hotKeyManager, permissionManager: permissionManager)
+                    .frame(width: 40, height: 40)
+
+                Spacer()
+
+                MouseGraphicSwitcher(selectedButton: $engine.config.button)
+                    .frame(width: 32, height: 40)
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 2)
+            .padding(.bottom, 12)
 
             // Contextual Live Status (HUD)
             StatusCardView(engine: engine, permissionManager: permissionManager)
@@ -89,13 +101,13 @@ public struct MainView: View {
             TimerConfigSection(engine: engine)
 
             // Bottom bar: Mode switch (Focus | Background) & Global shortcut
-            HStack(spacing: 8) {
-                HStack(spacing: 8) {
+            HStack(spacing: 6) {
+                HStack(spacing: 6) {
                     Button(action: {
                         engine.config.focusWindow = true
                     }) {
                         Text("Focus")
-                            .font(.system(size: 9.5, weight: engine.config.focusWindow ? .semibold : .regular))
+                            .font(.system(size: 9, weight: engine.config.focusWindow ? .semibold : .regular))
                             .foregroundColor(engine.config.focusWindow ? Theme.textPrimary : Theme.textSecondary)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -105,7 +117,7 @@ public struct MainView: View {
                         engine.config.focusWindow = false
                     }) {
                         Text("Background")
-                            .font(.system(size: 9.5, weight: !engine.config.focusWindow ? .semibold : .regular))
+                            .font(.system(size: 9, weight: !engine.config.focusWindow ? .semibold : .regular))
                             .foregroundColor(!engine.config.focusWindow ? Theme.textPrimary : Theme.textSecondary)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -117,10 +129,11 @@ public struct MainView: View {
                 // Global shortcut selector
                 HotKeySection(hotKeyManager: hotKeyManager)
             }
-            .frame(height: 20)
+            .frame(height: 18)
         }
-        .padding(12)
-        .frame(width: 260)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .frame(width: 190)
         .background(Theme.bgWindow)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .background(
