@@ -2,11 +2,6 @@ import Cocoa
 import SwiftUI
 import Combine
 
-public final class AppState: ObservableObject {
-    public static let shared = AppState()
-    @Published public var quitNotice: String? = nil
-}
-
 public final class AutoclixPanel: NSPanel {
     public override var canBecomeKey: Bool { true }
     public override var canBecomeMain: Bool { true }
@@ -65,7 +60,8 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
-        engine.stop()
+        // Must be synchronous: an async stop never runs before exit and can leave a button held down
+        engine.stopAndWait()
         hotKeyManager.unregister()
     }
 
@@ -152,10 +148,31 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
         panel.contentView = hostingView
 
         self.window = panel
+
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshOwnWindowFrames()
+        }
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshOwnWindowFrames()
+        }
     }
 
     public func hideWindow() {
         window?.orderOut(nil)
+        refreshOwnWindowFrames()
+    }
+
+    /// Publishes our window frames to the click engine's self-click guard.
+    private func refreshOwnWindowFrames() {
+        OwnWindowRegistry.shared.refresh(from: NSApp.windows)
     }
 
     private func updateWindowSize(_ newSize: CGSize) {
@@ -166,6 +183,7 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
         frame.size.width = newSize.width
         frame.size.height = newSize.height
         window.setFrame(frame, display: true, animate: false)
+        refreshOwnWindowFrames()
     }
 
     private func setupStateObservation() {
@@ -175,11 +193,23 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
                 self?.updateStatusItemIcon(for: state)
             }
             .store(in: &cancellables)
+
+        permissionManager.$isAccessibilityGranted
+            .removeDuplicates()
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] granted in
+                self?.engine.permissionChanged(granted: granted)
+            }
+            .store(in: &cancellables)
     }
 
     private func updateStatusItemIcon(for state: EngineState) {
         guard let button = statusItem?.button else { return }
-        button.image = createStatusBarIcon(for: state)
+        let icon = createStatusBarIcon(for: state)
+        if button.image !== icon {
+            button.image = icon
+        }
 
         switch state {
         case .running:
@@ -209,9 +239,27 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
             self?.engine.stop()
         }
 
-        // Stop safely on user session lock/switch
+        // Stop safely on fast user switching
         ws.addObserver(
             forName: NSWorkspace.sessionDidResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.engine.stop()
+        }
+
+        // Stop safely when displays sleep
+        ws.addObserver(
+            forName: NSWorkspace.screensDidSleepNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.engine.stop()
+        }
+
+        // Stop safely on screen lock, which posts no NSWorkspace notification
+        DistributedNotificationCenter.default().addObserver(
+            forName: NSNotification.Name("com.apple.screenIsLocked"),
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -234,7 +282,7 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
     public func toggleWindow() {
         guard let window = window else { return }
         if window.isVisible {
-            window.orderOut(nil)
+            hideWindow()
         } else {
             showWindow()
         }
@@ -266,6 +314,7 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
 
         window.setFrameOrigin(NSPoint(x: targetX, y: targetY))
         window.makeKeyAndOrderFront(nil)
+        refreshOwnWindowFrames()
         window.makeFirstResponder(nil)
         DispatchQueue.main.async {
             window.makeFirstResponder(nil)
@@ -282,7 +331,7 @@ public final class AutoclixApp: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let toggleTitle = engine.state.isActive ? "Stop Clicking" : "Start Clicking"
+        let toggleTitle = engine.isSessionActive ? "Stop Clicking" : "Start Clicking"
         let toggleItem = NSMenuItem(title: "\(toggleTitle) (\(hotKeyManager.currentConfig.displayString))", action: #selector(toggleEngineAction), keyEquivalent: "")
         toggleItem.target = self
         menu.addItem(toggleItem)

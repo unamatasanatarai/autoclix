@@ -2,7 +2,32 @@ import Cocoa
 import SwiftUI
 
 public enum StatusBarIconHelper {
+    // State updates arrive every 0.2s while running; build each variant once instead of re-reading PNGs each time.
+    // Main thread only.
+    private static var cache: [String: NSImage] = [:]
+
     public static func createIcon(for state: EngineState) -> NSImage {
+        let imageName = imageName(for: state)
+        if let cached = cache[imageName] {
+            return cached
+        }
+        let icon = loadIcon(for: state)
+        cache[imageName] = icon
+        return icon
+    }
+
+    private static func imageName(for state: EngineState) -> String {
+        switch state {
+        case .running:
+            return "StatusBarIcon-Active"
+        case .waiting, .permissionRequired:
+            return "StatusBarIcon-Waiting"
+        default:
+            return "StatusBarIcon"
+        }
+    }
+
+    private static func loadIcon(for state: EngineState) -> NSImage {
         let imageName: String
         let isTemplate: Bool
 

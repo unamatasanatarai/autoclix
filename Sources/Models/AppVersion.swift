@@ -10,14 +10,6 @@ public enum AppVersion {
            !content.isEmpty {
             return content
         }
-        if let content = try? String(contentsOfFile: "VERSION", encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines),
-           !content.isEmpty {
-            return content
-        }
-        if let content = try? String(contentsOfFile: "../VERSION", encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines),
-           !content.isEmpty {
-            return content
-        }
         return "1.0.0"
     }
 }

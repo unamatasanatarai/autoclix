@@ -59,12 +59,16 @@ public final class HotKeyManager: ObservableObject {
         )
     }
 
+    /// Registers the new shortcut before releasing the old one, so a conflict never leaves the
+    /// user without a working stop key. Only a successful registration is persisted. Main thread only.
     @discardableResult
     public func register(config: HotKeyConfiguration) -> Bool {
-        unregister()
-
-        self.currentConfig = config
-        PreferencesManager.shared.saveHotKeyConfiguration(config)
+        if hotKeyRef != nil && config.keyCode == currentConfig.keyCode && config.modifiers == currentConfig.modifiers {
+            self.currentConfig = config
+            PreferencesManager.shared.saveHotKeyConfiguration(config)
+            self.registrationError = nil
+            return true
+        }
 
         var ref: EventHotKeyRef?
         let hkID = EventHotKeyID(signature: hotKeySignature, id: hotKeyId)
@@ -78,24 +82,21 @@ public final class HotKeyManager: ObservableObject {
             &ref
         )
 
-        if status == noErr {
-            self.hotKeyRef = ref
-            DispatchQueue.main.async {
-                self.registrationError = nil
-            }
-            return true
-        } else {
-            let errorMsg: String
+        guard status == noErr, let newRef = ref else {
             if status == OSStatus(eventHotKeyExistsErr) {
-                errorMsg = "Shortcut conflict: \(config.displayString) is in use by another app."
+                self.registrationError = "\(config.displayString) is in use by another app."
             } else {
-                errorMsg = "Failed to register shortcut \(config.displayString) (Status: \(status))."
-            }
-            DispatchQueue.main.async {
-                self.registrationError = errorMsg
+                self.registrationError = "Failed to register \(config.displayString) (Status: \(status))."
             }
             return false
         }
+
+        unregister()
+        self.hotKeyRef = newRef
+        self.currentConfig = config
+        PreferencesManager.shared.saveHotKeyConfiguration(config)
+        self.registrationError = nil
+        return true
     }
 
     public func unregister() {

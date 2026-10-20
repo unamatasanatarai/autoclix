@@ -24,13 +24,13 @@ public struct ClickConfigSection: View {
             }
             .buttonStyle(PlainButtonStyle())
             .onHover { isIncrementHovered = $0 }
-            .help("Hold Ctrl (±5), Alt (±10), Cmd (±50)")
+            .help("Hold Option (±5) or Cmd (±10)")
 
             // Manual Input Box - Only [0-9], validated on the fly
             NativeDigitsField(
                 text: $cpsInputText,
-                minValue: 1,
-                maxValue: 900,
+                minValue: Int(ClickConfiguration.minCPS),
+                maxValue: Int(ClickConfiguration.maxCPS),
                 fontSize: 15.5,
                 fontWeight: .semibold,
                 alignment: .center,
@@ -53,7 +53,7 @@ public struct ClickConfigSection: View {
             }
             .buttonStyle(PlainButtonStyle())
             .onHover { isDecrementHovered = $0 }
-            .help("Hold Ctrl (±5), Alt (±10), Cmd (±50)")
+            .help("Hold Option (±5) or Cmd (±10)")
         }
         .frame(width: 32, height: 40)
         .onAppear {
@@ -75,7 +75,7 @@ public struct ClickConfigSection: View {
         // Read directly from what is currently in the input box!
         let current = Int(cpsInputText) ?? Int(engine.config.cps)
         let step = Int(ModifierStepHelper.step(base: 1.0))
-        let next = min(900, max(1, current + step))
+        let next = min(Int(ClickConfiguration.maxCPS), max(Int(ClickConfiguration.minCPS), current + step))
         cpsInputText = "\(next)"
         engine.config.cps = Double(next)
     }
@@ -84,7 +84,7 @@ public struct ClickConfigSection: View {
         // Read directly from what is currently in the input box!
         let current = Int(cpsInputText) ?? Int(engine.config.cps)
         let step = Int(ModifierStepHelper.step(base: 1.0))
-        let next = max(1, min(900, current - step))
+        let next = max(Int(ClickConfiguration.minCPS), min(Int(ClickConfiguration.maxCPS), current - step))
         cpsInputText = "\(next)"
         engine.config.cps = Double(next)
     }

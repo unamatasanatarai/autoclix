@@ -23,8 +23,8 @@ public struct TimerConfigSection: View {
             ) {
                 NativeDecimalField(
                     text: $delayText,
-                    minValue: 0.0001,
-                    maxValue: 3600.0,
+                    minValue: ClickConfiguration.minSeconds,
+                    maxValue: ClickConfiguration.maxStartDelaySeconds,
                     fontSize: 8.5,
                     fontWeight: .regular,
                     textColor: Theme.nsTextPrimary,
@@ -42,8 +42,8 @@ public struct TimerConfigSection: View {
             ) {
                 NativeDecimalField(
                     text: $durationText,
-                    minValue: 0.0001,
-                    maxValue: 86400.0,
+                    minValue: ClickConfiguration.minSeconds,
+                    maxValue: ClickConfiguration.maxStopDurationSeconds,
                     fontSize: 8.5,
                     fontWeight: .regular,
                     textColor: Theme.nsTextPrimary,
@@ -62,7 +62,7 @@ public struct TimerConfigSection: View {
                 NativeDigitsField(
                     text: $clicksText,
                     minValue: 1,
-                    maxValue: 10_000_000,
+                    maxValue: ClickConfiguration.maxClickLimit,
                     fontSize: 8.5,
                     fontWeight: .regular,
                     textColor: Theme.nsTextPrimary,
@@ -98,24 +98,12 @@ public struct TimerConfigSection: View {
         syncClicksText()
     }
 
-    private func formatNumberString(_ val: Double) -> String {
-        if val.truncatingRemainder(dividingBy: 1) == 0 {
-            return "\(Int(val))"
-        } else {
-            let str = String(format: "%.4f", val)
-            var trimmed = str
-            while trimmed.hasSuffix("0") { trimmed.removeLast() }
-            if trimmed.hasSuffix(".") { trimmed.removeLast() }
-            return trimmed
-        }
-    }
-
     private func syncDelayText() {
-        delayText = formatNumberString(engine.config.startDelaySeconds)
+        delayText = NumberText.compact(engine.config.startDelaySeconds)
     }
 
     private func syncDurationText() {
-        durationText = formatNumberString(engine.config.stopDurationSeconds)
+        durationText = NumberText.compact(engine.config.stopDurationSeconds)
     }
 
     private func syncClicksText() {
@@ -127,43 +115,43 @@ public struct TimerConfigSection: View {
     private func incrementDelay() {
         let current = Double(delayText) ?? engine.config.startDelaySeconds
         let step = ModifierStepHelper.step(base: 1.0, isDecimal: true)
-        let next = min(3600.0, current + step)
+        let next = min(ClickConfiguration.maxStartDelaySeconds, current + step)
         let rounded = (round(next * 10000) / 10000)
         engine.config.startDelaySeconds = rounded
-        delayText = formatNumberString(rounded)
+        delayText = NumberText.compact(rounded)
     }
 
     private func decrementDelay() {
         let current = Double(delayText) ?? engine.config.startDelaySeconds
         let step = ModifierStepHelper.step(base: 1.0, isDecimal: true)
-        let next = max(0.0001, current - step) // 0.1 ms minimum
+        let next = max(ClickConfiguration.minSeconds, current - step) // 0.1 ms minimum
         let rounded = (round(next * 10000) / 10000)
         engine.config.startDelaySeconds = rounded
-        delayText = formatNumberString(rounded)
+        delayText = NumberText.compact(rounded)
     }
 
     private func incrementDuration() {
         let current = Double(durationText) ?? engine.config.stopDurationSeconds
         let step = ModifierStepHelper.step(base: 1.0, isDecimal: true)
-        let next = min(86400.0, current + step)
+        let next = min(ClickConfiguration.maxStopDurationSeconds, current + step)
         let rounded = (round(next * 10000) / 10000)
         engine.config.stopDurationSeconds = rounded
-        durationText = formatNumberString(rounded)
+        durationText = NumberText.compact(rounded)
     }
 
     private func decrementDuration() {
         let current = Double(durationText) ?? engine.config.stopDurationSeconds
         let step = ModifierStepHelper.step(base: 1.0, isDecimal: true)
-        let next = max(0.0001, current - step) // 0.1 ms minimum
+        let next = max(ClickConfiguration.minSeconds, current - step) // 0.1 ms minimum
         let rounded = (round(next * 10000) / 10000)
         engine.config.stopDurationSeconds = rounded
-        durationText = formatNumberString(rounded)
+        durationText = NumberText.compact(rounded)
     }
 
     private func incrementClicks() {
         let current = Int(clicksText) ?? engine.config.clickLimit
         let step = Int(ModifierStepHelper.step(base: 1.0))
-        let next = min(10_000_000, max(1, current + step))
+        let next = min(ClickConfiguration.maxClickLimit, max(1, current + step))
         clicksText = "\(next)"
         engine.config.clickLimit = next
     }

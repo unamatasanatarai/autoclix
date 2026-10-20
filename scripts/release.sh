@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 app_name="AutoCliX"
-bundle_id="com.citizen.autoclix"
+bundle_id="com.unamatasanatarai.autoclix"
 build_dir="build"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/autoclix"
@@ -116,11 +116,25 @@ dmg_path="${build_dir}/${dmg_name}"
 
 if [[ "$dry_run" -eq 1 ]]; then
     printf '%s\n' "Previewing release ${app_name} v${version} (bumped from v${current_version})"
+    printf '%s\n' "Would require a clean working tree"
     printf '%s\n' "Would run unit test suite (./scripts/test.sh)"
-    printf '%s\n' "Would commit version bump to VERSION and push to branch"
     printf '%s\n' "Would build styled DMG package (${dmg_path})"
+    printf '%s\n' "Would commit version bump to VERSION"
 else
-    printf '%s\n' "$version" >"VERSION"
+    # The DMG is built from the working tree, so it must match the commit being tagged
+    status_file="${cache_dir}/git_status.tmp"
+    git status --porcelain >"$status_file" 2>/dev/null
+    if [[ $? -ne 0 ]]; then
+        rm -f "$status_file"
+        printf '%s\n' "Error: Failed to read git status" >&2
+        exit 1
+    fi
+    if [[ -s "$status_file" ]]; then
+        rm -f "$status_file"
+        printf '%s\n' "Error: Working tree has uncommitted changes. Commit or stash them before releasing." >&2
+        exit 1
+    fi
+    rm -f "$status_file"
 
     ./scripts/test.sh
     if [[ $? -ne 0 ]]; then
@@ -128,9 +142,13 @@ else
         exit 1
     fi
 
-    ./scripts/build.sh
+    printf '%s\n' "$version" >"VERSION"
+
+    # build_dmg.sh also builds and signs the app bundle
+    ./scripts/build_dmg.sh
     if [[ $? -ne 0 ]]; then
-        printf '%s\n' "Error: Application build failed" >&2
+        git checkout -- "VERSION"
+        printf '%s\n' "Error: DMG build failed" >&2
         exit 1
     fi
 
@@ -139,31 +157,10 @@ else
         git add "VERSION"
         git commit -m "chore(release): bump version to v${version}"
         if [[ $? -ne 0 ]]; then
+            git checkout -- "VERSION"
             printf '%s\n' "Error: Failed to commit version bump" >&2
             exit 1
         fi
-        branch_file="${cache_dir}/current_branch.tmp"
-        git rev-parse --abbrev-ref HEAD >"$branch_file" 2>/dev/null
-        current_branch=""
-        if [[ -f "$branch_file" ]]; then
-            IFS= read -r current_branch <"$branch_file"
-            rm -f "$branch_file"
-        fi
-        if [[ -z "$current_branch" ]]; then
-            printf '%s\n' "Error: Failed to determine current git branch" >&2
-            exit 1
-        fi
-        git push origin "$current_branch"
-        if [[ $? -ne 0 ]]; then
-            printf '%s\n' "Error: Failed to push commit to remote" >&2
-            exit 1
-        fi
-    fi
-
-    ./scripts/build_dmg.sh
-    if [[ $? -ne 0 ]]; then
-        printf '%s\n' "Error: DMG build failed" >&2
-        exit 1
     fi
 fi
 
@@ -289,9 +286,22 @@ else
         exit 1
     fi
 
-    git push origin "v${version}"
+    branch_file="${cache_dir}/current_branch.tmp"
+    git rev-parse --abbrev-ref HEAD >"$branch_file" 2>/dev/null
+    current_branch=""
+    if [[ -f "$branch_file" ]]; then
+        IFS= read -r current_branch <"$branch_file"
+        rm -f "$branch_file"
+    fi
+    if [[ -z "$current_branch" || "$current_branch" == "HEAD" ]]; then
+        printf '%s\n' "Error: Failed to determine current git branch" >&2
+        exit 1
+    fi
+
+    # Branch and tag land together or not at all
+    git push --atomic origin "$current_branch" "v${version}"
     if [[ $? -ne 0 ]]; then
-        printf '%s\n' "Error: Failed to push git tag to origin" >&2
+        printf '%s\n' "Error: Failed to push branch and tag to origin" >&2
         exit 1
     fi
 

@@ -15,6 +15,10 @@ public struct ClickConfiguration: Codable, Equatable {
     public static let maxCPS: Double = 900.0
     public static let defaultCPS: Double = 8.0
     public static let defaultClickLimit: Int = 42
+    public static let maxClickLimit: Int = 10_000_000
+    public static let minSeconds: Double = 0.0001 // 0.1 ms
+    public static let maxStartDelaySeconds: Double = 3600.0
+    public static let maxStopDurationSeconds: Double = 86400.0
 
     public init(
         button: MouseButton = .left,
@@ -28,13 +32,13 @@ public struct ClickConfiguration: Codable, Equatable {
         focusWindow: Bool = true
     ) {
         self.button = button
-        self.cps = min(max(cps, ClickConfiguration.minCPS), ClickConfiguration.maxCPS)
+        self.cps = ClickConfiguration.clamp(cps, ClickConfiguration.minCPS, ClickConfiguration.maxCPS, fallback: ClickConfiguration.defaultCPS)
         self.startDelayEnabled = startDelayEnabled
-        self.startDelaySeconds = max(0.0001, startDelaySeconds)
+        self.startDelaySeconds = ClickConfiguration.clamp(startDelaySeconds, ClickConfiguration.minSeconds, ClickConfiguration.maxStartDelaySeconds, fallback: 3.0)
         self.stopDurationEnabled = stopDurationEnabled
-        self.stopDurationSeconds = max(0.0001, stopDurationSeconds)
+        self.stopDurationSeconds = ClickConfiguration.clamp(stopDurationSeconds, ClickConfiguration.minSeconds, ClickConfiguration.maxStopDurationSeconds, fallback: 10.0)
         self.clickLimitEnabled = clickLimitEnabled
-        self.clickLimit = max(1, clickLimit)
+        self.clickLimit = min(max(1, clickLimit), ClickConfiguration.maxClickLimit)
         self.focusWindow = focusWindow
     }
 
@@ -44,17 +48,36 @@ public struct ClickConfiguration: Codable, Equatable {
         case focusWindow
     }
 
+    // Routed through the clamping initializer so persisted values can never violate the invariants.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.button = try container.decodeIfPresent(MouseButton.self, forKey: .button) ?? .left
-        self.cps = try container.decodeIfPresent(Double.self, forKey: .cps) ?? 8.0
-        self.startDelayEnabled = try container.decodeIfPresent(Bool.self, forKey: .startDelayEnabled) ?? false
-        self.startDelaySeconds = try container.decodeIfPresent(Double.self, forKey: .startDelaySeconds) ?? 3.0
-        self.stopDurationEnabled = try container.decodeIfPresent(Bool.self, forKey: .stopDurationEnabled) ?? false
-        self.stopDurationSeconds = try container.decodeIfPresent(Double.self, forKey: .stopDurationSeconds) ?? 10.0
-        self.clickLimitEnabled = try container.decodeIfPresent(Bool.self, forKey: .clickLimitEnabled) ?? true
-        self.clickLimit = try container.decodeIfPresent(Int.self, forKey: .clickLimit) ?? 42
-        self.focusWindow = try container.decodeIfPresent(Bool.self, forKey: .focusWindow) ?? true
+        self.init(
+            button: try container.decodeIfPresent(MouseButton.self, forKey: .button) ?? .left,
+            cps: try container.decodeIfPresent(Double.self, forKey: .cps) ?? 8.0,
+            startDelayEnabled: try container.decodeIfPresent(Bool.self, forKey: .startDelayEnabled) ?? false,
+            startDelaySeconds: try container.decodeIfPresent(Double.self, forKey: .startDelaySeconds) ?? 3.0,
+            stopDurationEnabled: try container.decodeIfPresent(Bool.self, forKey: .stopDurationEnabled) ?? false,
+            stopDurationSeconds: try container.decodeIfPresent(Double.self, forKey: .stopDurationSeconds) ?? 10.0,
+            clickLimitEnabled: try container.decodeIfPresent(Bool.self, forKey: .clickLimitEnabled) ?? true,
+            clickLimit: try container.decodeIfPresent(Int.self, forKey: .clickLimit) ?? 42,
+            focusWindow: try container.decodeIfPresent(Bool.self, forKey: .focusWindow) ?? true
+        )
+    }
+
+    /// Returns a copy with every field clamped to its valid range.
+    /// Needed because views mutate fields directly, bypassing `init`.
+    public func sanitized() -> ClickConfiguration {
+        ClickConfiguration(
+            button: button,
+            cps: cps,
+            startDelayEnabled: startDelayEnabled,
+            startDelaySeconds: startDelaySeconds,
+            stopDurationEnabled: stopDurationEnabled,
+            stopDurationSeconds: stopDurationSeconds,
+            clickLimitEnabled: clickLimitEnabled,
+            clickLimit: clickLimit,
+            focusWindow: focusWindow
+        )
     }
 
     public var intervalSeconds: Double {
@@ -63,5 +86,10 @@ public struct ClickConfiguration: Codable, Equatable {
 
     public var intervalMilliseconds: Double {
         intervalSeconds * 1000.0
+    }
+
+    private static func clamp(_ value: Double, _ lower: Double, _ upper: Double, fallback: Double) -> Double {
+        guard value.isFinite else { return fallback }
+        return min(max(value, lower), upper)
     }
 }

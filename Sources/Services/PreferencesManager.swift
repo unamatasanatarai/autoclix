@@ -3,11 +3,13 @@ import Foundation
 public final class PreferencesManager {
     public static let shared = PreferencesManager()
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private let clickConfigKey = "com.autoclix.clickConfiguration"
     private let hotKeyConfigKey = "com.autoclix.hotKeyConfiguration"
 
-    private init() {}
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     public func loadClickConfiguration() -> ClickConfiguration {
         guard let data = defaults.data(forKey: clickConfigKey),

@@ -130,6 +130,22 @@ public struct MainView: View {
                 HotKeySection(hotKeyManager: hotKeyManager)
             }
             .frame(height: 18)
+
+            // Global shortcut registration failure: the stop key may not work
+            if let error = hotKeyManager.registrationError {
+                HStack(spacing: 5) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 9))
+                    Text(error)
+                        .font(.system(size: 9, weight: .semibold))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundColor(Theme.orange)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+                .background(Theme.orange.opacity(0.14))
+                .cornerRadius(5)
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)

@@ -163,7 +163,7 @@ macOS requires Accessibility permissions (`AXIsProcessTrusted`) to inject system
 2. Click **Grant Permission** to open **System Settings > Privacy & Security > Accessibility**.
 3. Enable **AutoCliX**.
 
-> **Note for Developers:** `scripts/build.sh` automatically signs the binary using a designated requirement identity (`=designated => identifier "com.citizen.autoclix"`). This ensures macOS preserves your TCC Accessibility approval across local rebuilds.
+> **Note for Developers:** `scripts/build.sh` automatically signs the binary using a designated requirement identity (`=designated => identifier "com.unamatasanatarai.autoclix"`). This ensures macOS preserves your TCC Accessibility approval across local rebuilds and releases.
 >
 > If you ever need to reset permissions for clean testing, run:
 > ```bash
@@ -174,13 +174,11 @@ macOS requires Accessibility permissions (`AXIsProcessTrusted`) to inject system
 
 ## Verification & Testing
 
-AutoCliX includes an automated test and compilation verification suite:
-
 ```bash
 make test
 ```
 
-This compiles all engine modules, service layers, and view hierarchies against the macOS SDK to verify complete type safety and Carbon/Quartz API compatibility.
+Type-checks the full application, then builds and runs the unit tests in `Tests/`. They drive `ClickEngine` through a fake event poster (no real clicks are posted) and cover click/duration limits, start delay, stop latency and cancellation, live CPS changes, permission handling, and configuration clamping.
 
 ---
 

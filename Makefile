@@ -22,14 +22,14 @@ launch:
 	@echo "==> Launching AutoCliX.app (no rebuild)..."
 	@open "build/AutoCliX.app"
 
-## test: Run Swift unit test suite
+## test: Type-check the app and run unit tests
 test:
 	@./scripts/test.sh
 
-## revoke: Reset macOS Accessibility TCC permissions for com.citizen.autoclix
+## revoke: Reset macOS Accessibility TCC permissions for com.unamatasanatarai.autoclix
 revoke:
 	@echo "==> Resetting TCC permissions..."
-	@tccutil reset Accessibility com.citizen.autoclix 2>/dev/null || true
+	@tccutil reset Accessibility com.unamatasanatarai.autoclix 2>/dev/null || true
 	@echo "✅ All permissions revoked."
 
 ## reset-cache: Clear macOS LaunchServices and IconServices caches

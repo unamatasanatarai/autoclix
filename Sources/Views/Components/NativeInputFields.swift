@@ -8,6 +8,25 @@ final class UnfocusedTextField: NSTextField {
     override var canBecomeKeyView: Bool { false }
 }
 
+public enum NumberText {
+    /// Formats with up to 4 decimals and no trailing zeros (e.g. 3, 0.25, 0.0001).
+    public static func compact(_ val: Double) -> String {
+        if val.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(val))"
+        } else {
+            let str = String(format: "%.4f", val)
+            var trimmed = str
+            while trimmed.hasSuffix("0") { trimmed.removeLast() }
+            if trimmed.hasSuffix(".") { trimmed.removeLast() }
+            return trimmed
+        }
+    }
+
+    static func isASCIIDigit(_ ch: Character) -> Bool {
+        ch.isASCII && ch.isNumber
+    }
+}
+
 public struct NativeDigitsField: NSViewRepresentable {
     @Binding public var text: String
     public var minValue: Int = 1
@@ -60,6 +79,8 @@ public struct NativeDigitsField: NSViewRepresentable {
     }
 
     public func updateNSView(_ nsView: NSTextField, context: Context) {
+        context.coordinator.parent = self
+        context.coordinator.rememberIfValid(text)
         if nsView.textColor != textColor {
             nsView.textColor = textColor
         }
@@ -74,15 +95,23 @@ public struct NativeDigitsField: NSViewRepresentable {
 
     public class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: NativeDigitsField
+        private var lastValidText: String
 
         init(_ parent: NativeDigitsField) {
             self.parent = parent
+            self.lastValidText = parent.text
+        }
+
+        func rememberIfValid(_ text: String) {
+            if Int(text) != nil {
+                lastValidText = text
+            }
         }
 
         public func controlTextDidChange(_ obj: Notification) {
             guard let tf = obj.object as? NSTextField else { return }
             let raw = tf.stringValue
-            let digits = raw.filter { $0.isNumber }
+            let digits = raw.filter(NumberText.isASCIIDigit)
 
             var validated = digits
             if let num = Int(digits) {
@@ -106,11 +135,17 @@ public struct NativeDigitsField: NSViewRepresentable {
             }
 
             parent.text = validated
+            // An empty field is a transient edit state; the model keeps its value until a number is typed
             if let num = Int(validated) {
+                lastValidText = validated
                 parent.onChange?(num)
-            } else if validated.isEmpty {
-                parent.onChange?(parent.minValue)
             }
+        }
+
+        public func controlTextDidEndEditing(_ obj: Notification) {
+            guard let tf = obj.object as? NSTextField, Int(tf.stringValue) == nil else { return }
+            tf.stringValue = lastValidText
+            parent.text = lastValidText
         }
 
         public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -178,6 +213,8 @@ public struct NativeDecimalField: NSViewRepresentable {
     }
 
     public func updateNSView(_ nsView: NSTextField, context: Context) {
+        context.coordinator.parent = self
+        context.coordinator.rememberIfValid(text)
         if nsView.textColor != textColor {
             nsView.textColor = textColor
         }
@@ -192,16 +229,24 @@ public struct NativeDecimalField: NSViewRepresentable {
 
     public class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: NativeDecimalField
+        private var lastValidText: String
 
         init(_ parent: NativeDecimalField) {
             self.parent = parent
+            self.lastValidText = parent.text
+        }
+
+        func rememberIfValid(_ text: String) {
+            if Double(text) != nil && !text.hasSuffix(".") {
+                lastValidText = text
+            }
         }
 
         private func filterDecimal(_ raw: String) -> String {
             var hasDot = false
             var result = ""
             for ch in raw.replacingOccurrences(of: ",", with: ".") {
-                if ch.isNumber {
+                if NumberText.isASCIIDigit(ch) {
                     result.append(ch)
                 } else if ch == "." && !hasDot {
                     hasDot = true
@@ -209,18 +254,6 @@ public struct NativeDecimalField: NSViewRepresentable {
                 }
             }
             return result
-        }
-
-        private func formatNumberString(_ val: Double) -> String {
-            if val.truncatingRemainder(dividingBy: 1) == 0 {
-                return "\(Int(val))"
-            } else {
-                let str = String(format: "%.4f", val)
-                var trimmed = str
-                while trimmed.hasSuffix("0") { trimmed.removeLast() }
-                if trimmed.hasSuffix(".") { trimmed.removeLast() }
-                return trimmed
-            }
         }
 
         public func controlTextDidChange(_ obj: Notification) {
@@ -231,7 +264,7 @@ public struct NativeDecimalField: NSViewRepresentable {
 
             if let val = Double(filtered), !filtered.hasSuffix(".") {
                 if val > parent.maxValue {
-                    validated = formatNumberString(parent.maxValue)
+                    validated = NumberText.compact(parent.maxValue)
                 }
             }
 
@@ -246,8 +279,18 @@ public struct NativeDecimalField: NSViewRepresentable {
             parent.text = validated
 
             if let val = Double(validated), !validated.hasSuffix(".") {
+                lastValidText = validated
                 let clamped = max(parent.minValue, min(parent.maxValue, val))
                 parent.onChange?(clamped)
+            }
+        }
+
+        public func controlTextDidEndEditing(_ obj: Notification) {
+            guard let tf = obj.object as? NSTextField else { return }
+            let text = tf.stringValue
+            if Double(text) == nil || text.hasSuffix(".") {
+                tf.stringValue = lastValidText
+                parent.text = lastValidText
             }
         }
 

@@ -19,7 +19,7 @@ IFS= read -r sdk_path <"$sdk_file"
 rm -f "$sdk_file"
 
 app_name="AutoCliX"
-bundle_id="com.citizen.autoclix"
+bundle_id="com.unamatasanatarai.autoclix"
 
 version=""
 if [[ -f "VERSION" ]]; then
@@ -122,8 +122,11 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+# Ad-hoc signature with an identifier-only designated requirement keeps the Accessibility (TCC)
+# grant valid across rebuilds and releases without an Apple Developer certificate.
+# Hardened runtime blocks dylib injection into the trusted process.
 printf '%s\n' "3. Signing application bundle with stable designated requirement..."
-codesign --force --deep --sign - --requirements "=designated => identifier \"${bundle_id}\"" "$app_dir"
+codesign --force --options runtime --sign - --requirements "=designated => identifier \"${bundle_id}\"" "$app_dir"
 if [[ $? -ne 0 ]]; then
     printf '%s\n' "Error: Code signing failed" >&2
     exit 1
